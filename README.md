@@ -27,7 +27,7 @@ first run, so no separate Gradle install is needed.
 ./gradlew build          # compile + run unit tests (plain jar, not installable on its own)
 ```
 
-Install the **`shadowJar`** output (e.g. `build/libs/qupath-extension-anchor-0.1.0-SNAPSHOT.jar`).
+Install the **`shadowJar`** output (e.g. `build/libs/qupath-extension-anchor-0.1.1-SNAPSHOT.jar`).
 Most dependencies (QuPath API, JavaFX, Commons Math) are provided by QuPath at runtime, but the
 nonlinear-warp library `imglib2-realtransform` is **not**, so it must be bundled: that is what
 `shadowJar` does. The plain `jar` from `build` omits it and would fail at runtime for the TPS overlay.
