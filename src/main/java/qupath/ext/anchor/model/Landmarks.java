@@ -3,8 +3,10 @@ package qupath.ext.anchor.model;
 import java.awt.geom.Point2D;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Set;
 
 import qupath.lib.geom.Point2;
 import qupath.lib.objects.PathObject;
@@ -98,6 +100,35 @@ public final class Landmarks {
                 max = Math.max(max, id.getAsInt());
         }
         return max + 1;
+    }
+
+    /** The landmark ids present among the given objects. */
+    public static Set<Integer> usedIds(Collection<? extends PathObject> objects) {
+        Set<Integer> ids = new HashSet<>();
+        for (PathObject o : objects) {
+            OptionalInt id = getId(o);
+            if (id.isPresent())
+                ids.add(id.getAsInt());
+        }
+        return ids;
+    }
+
+    /**
+     * The lowest landmark id not yet used among the given objects (1 if there are none). Fills gaps
+     * left by deleted landmarks (e.g. with LM-01..LM-18 minus LM-08, returns 8) before continuing
+     * after the highest id. Used for single-landmark additions; bulk operations (grid seeding,
+     * alignment points) keep a contiguous block via {@link #nextId}.
+     */
+    public static int firstFreeId(Collection<? extends PathObject> objects) {
+        return lowestFreeId(usedIds(objects));
+    }
+
+    /** The lowest positive integer not in {@code used}. */
+    public static int lowestFreeId(Set<Integer> used) {
+        int id = 1;
+        while (used.contains(id))
+            id++;
+        return id;
     }
 
     /** The role, or {@code null} if not a landmark or unrecognized. */

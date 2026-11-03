@@ -76,8 +76,16 @@ which is all a raw viewer can reproduce; richer transforms apply to the overlay 
 
 ### Landmarks
 Seed a deterministic near-square grid of **N** numbered points (drag each onto its feature), clear all
-Anchor landmarks, load a prior GeoJSON point set, or export. Numbering continues from the highest
-existing id, so grid points seeded after 3 alignment points start at 4. Landmark names use QuPath's
+Anchor landmarks, load a prior GeoJSON point set, or export (the summary reports the landmark count
+per image and in total). Grid and alignment points continue from the highest existing id, so grid
+points seeded after 3 alignment points start at 4.
+
+`Add landmark` adds a single point with the **lowest free number** (a deleted LM-08 is re-used before
+LM-19). The `Shortcut+Alt+L` shortcut places it **under the mouse cursor** (the panel button, or a
+cursor outside the viewer, uses the view center). While **aligned sync** is active, the same number
+is also added to the other synced images at the matching location, only where it is missing.
+`Shortcut+Alt+Y` uses the overlay transform and point source selected in the panel, exactly like the
+`Align & sync` button. Landmark names use QuPath's
 native point labels (toggle with the toolbar "Show names").
 
 ### Overlay

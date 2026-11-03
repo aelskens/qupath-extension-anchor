@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import javafx.stage.FileChooser;
 import qupath.ext.anchor.io.LandmarkIO;
+import qupath.ext.anchor.model.ImageNames;
 import qupath.ext.anchor.model.Landmarks;
 import qupath.fx.dialogs.Dialogs;
 import qupath.lib.gui.QuPathGUI;
@@ -62,8 +63,15 @@ public class LoadLandmarksCommand implements Runnable {
         }
 
         long landmarkCount = objects.stream().filter(Landmarks::isLandmark).count();
-        logger.info("Loaded {} object(s) ({} landmarks) from {}", objects.size(), landmarkCount, file.getName());
-        Dialogs.showInfoNotification(TITLE, String.format("Loaded %d object(s)%s into the current image.",
-                objects.size(), landmarkCount > 0 ? " (" + landmarkCount + " landmarks)" : ""));
+        long otherCount = objects.size() - landmarkCount;
+        int totalLandmarks = LandmarkIO.landmarks(imageData).size();
+        String imageName = ImageNames.fileName(imageData.getServer());
+        logger.info("Imported {} landmark(s) and {} other object(s) from {} into {} (now {} landmark(s))",
+                landmarkCount, otherCount, file.getName(), imageName, totalLandmarks);
+        Dialogs.showInfoNotification(TITLE, String.format(
+                "Imported %d landmark(s)%s from %s into %s.%nThis image now has %d landmark(s) in total.",
+                landmarkCount,
+                otherCount > 0 ? " and " + otherCount + " other object(s)" : "",
+                file.getName(), imageName, totalLandmarks));
     }
 }

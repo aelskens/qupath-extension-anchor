@@ -15,6 +15,7 @@ import qupath.ext.anchor.commands.SeedGridCommand;
 import qupath.ext.anchor.commands.ViewerCommands;
 import qupath.ext.anchor.overlay.ColorProjectionManager;
 import qupath.ext.anchor.ui.ShowAnchorPanelCommand;
+import qupath.ext.anchor.viewer.CursorTracker;
 import qupath.lib.common.Version;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.extensions.QuPathExtension;
@@ -47,6 +48,8 @@ public class AnchorExtension implements QuPathExtension {
             return;
         installed = true;
         showPanel = new ShowAnchorPanelCommand(qupath);
+        // Lets "Add landmark" (Shortcut+Alt+L) place the point under the mouse cursor.
+        CursorTracker.getInstance().install(qupath);
 
         Menu menu = qupath.getMenu("Extensions>" + EXTENSION_NAME, true);
         menu.getItems().addAll(
@@ -68,7 +71,8 @@ public class AnchorExtension implements QuPathExtension {
 
                 header("Landmarks"),
                 item("Add landmark", "Shortcut+Alt+L",
-                        () -> new AddLandmarkCommand(qupath).run()),
+                        // Under the mouse cursor when it is over the active viewer, else the view center.
+                        () -> new AddLandmarkCommand(qupath, true).run()),
                 item("Seed landmark grid...", "Shortcut+Alt+G",
                         () -> new SeedGridCommand(qupath).run()),
                 item("Clear landmarks", null,

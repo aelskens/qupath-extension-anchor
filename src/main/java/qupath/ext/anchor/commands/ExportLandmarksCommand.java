@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import javafx.stage.FileChooser;
 import qupath.ext.anchor.io.LandmarkIO;
+import qupath.ext.anchor.model.ImageNames;
 import qupath.fx.dialogs.Dialogs;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.objects.PathObject;
@@ -83,8 +84,8 @@ public class ExportLandmarksCommand implements Runnable {
         }
 
         logger.info("Exported {} landmark(s) to {}", landmarks.size(), file.getAbsolutePath());
-        Dialogs.showInfoNotification(TITLE,
-                String.format("Exported %d landmark(s) to %s.", landmarks.size(), file.getName()));
+        Dialogs.showInfoNotification(TITLE, String.format("Exported %d landmark(s) from %s to %s.",
+                landmarks.size(), ImageNames.fileName(imageData.getServer()), file.getName()));
     }
 
     private static File ensureExtension(File file, String ext) {

@@ -55,6 +55,8 @@ public class AlignedSyncController implements QuPathViewerListener {
     private Point2D referenceCenter;
 
     private boolean applying = false;
+    /** True between {@link #start()} and {@link #stop()}. */
+    private boolean running = false;
     private boolean rotationSyncEnabled = true;
 
     public AlignedSyncController(List<ViewerAlignment> alignments) {
@@ -121,7 +123,45 @@ public class AlignedSyncController implements QuPathViewerListener {
         return result;
     }
 
+    /** All participating viewers, reference first. */
+    public List<QuPathViewer> getViewers() {
+        return List.copyOf(viewers);
+    }
+
+    /**
+     * True if {@code viewer} takes part in this alignment and the sync is still running (it stops
+     * itself when a participating viewer closes or changes image, so its transforms are stale then).
+     */
+    public boolean contains(QuPathViewer viewer) {
+        return running && transforms.containsKey(viewer);
+    }
+
+    /**
+     * Map a point from one participating viewer's image pixels into another's, through the shared
+     * reference frame. Uses the overlay transform (the user's chosen type, possibly TPS, the most
+     * accurate point-to-point mapping) and falls back to the linear sync transform. Returns
+     * {@code null} if either viewer is not part of this alignment or the inverse cannot be computed.
+     */
+    public Point2D mapPoint(QuPathViewer from, QuPathViewer to, Point2D point) {
+        if (!running)
+            return null;
+        LandmarkTransform fromT = pointTransform(from);
+        LandmarkTransform toT = pointTransform(to);
+        if (fromT == null || toT == null || point == null)
+            return null;
+        Point2D reference = fromT.applyInverse(point);
+        return reference == null ? null : toT.apply(reference);
+    }
+
+    private LandmarkTransform pointTransform(QuPathViewer viewer) {
+        if (!transforms.containsKey(viewer))
+            return null;
+        LandmarkTransform t = getOverlayTransform(viewer);
+        return t != null ? t : transforms.get(viewer);
+    }
+
     public void start() {
+        running = true;
         for (QuPathViewer v : viewers)
             v.addViewerListener(this);
         syncFrom(viewers.get(0));
@@ -129,6 +169,7 @@ public class AlignedSyncController implements QuPathViewerListener {
     }
 
     public void stop() {
+        running = false;
         for (QuPathViewer v : viewers)
             v.removeViewerListener(this);
         logger.info("Aligned sync stopped.");

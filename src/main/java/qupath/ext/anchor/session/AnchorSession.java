@@ -2,7 +2,9 @@ package qupath.ext.anchor.session;
 
 import java.time.Instant;
 
+import qupath.ext.anchor.model.PointSource;
 import qupath.ext.anchor.model.SessionInfo;
+import qupath.ext.anchor.transform.TransformType;
 import qupath.fx.dialogs.Dialogs;
 
 /**
@@ -19,8 +21,32 @@ public final class AnchorSession {
     private String annotator;
     private String sessionId;
     private String mode = SessionInfo.MODE_ASSISTED;
+    // Alignment choices made in the panel, shared with the menu/keyboard shortcut so both run the same
+    // fit (the shortcut used to hardcode affine + manual points).
+    private TransformType overlayTransformType = TransformType.AFFINE;
+    private PointSource pointSource = PointSource.MANUAL;
 
     private AnchorSession() {}
+
+    /** The transform used for the overlay (the viewer sync itself is always a similarity). */
+    public synchronized TransformType overlayTransformType() {
+        return overlayTransformType;
+    }
+
+    public synchronized void setOverlayTransformType(TransformType type) {
+        if (type != null)
+            this.overlayTransformType = type;
+    }
+
+    /** Which landmarks feed the alignment fit. */
+    public synchronized PointSource pointSource() {
+        return pointSource;
+    }
+
+    public synchronized void setPointSource(PointSource source) {
+        if (source != null)
+            this.pointSource = source;
+    }
 
     public static AnchorSession getInstance() {
         return INSTANCE;

@@ -65,9 +65,12 @@ public class AnchorPanel extends SplitPane {
 
             Landmarks
             - 'Seed grid': N points to drag onto features (for annotation / agreement studies).
-            - 'Add landmark': one point at the view center.
-            - Numbering continues from the highest existing id (so points added after the first
-              three are numbered 4, 5, ...).
+            - 'Add landmark': one point at the view center (the Shortcut+Alt+L shortcut places it
+              under the mouse cursor). It takes the lowest free number, so a deleted LM-08 is
+              re-used before LM-19. While synced, it is also added to the other images at the
+              matching location, wherever that number is missing.
+            - Grid and alignment points continue from the highest existing id (so points placed
+              after the first three are numbered 4, 5, ...).
             - Landmark labels (LM-xx) use QuPath's native point-annotation names (toggle them with
               the toolbar 'Show names' button); they follow each viewer's transform.
 
@@ -166,18 +169,21 @@ public class AnchorPanel extends SplitPane {
         // selects the OVERLAY transform only, and lives in the Color overlay section.
         transformCombo.getItems().addAll(TransformType.RIGID, TransformType.SIMILARITY,
                 TransformType.AFFINE, TransformType.TPS);
-        transformCombo.getSelectionModel().select(TransformType.AFFINE);
+        // Selections live in AnchorSession so the menu shortcut (Shortcut+Alt+Y) uses the same choice.
+        transformCombo.getSelectionModel().select(AnchorSession.getInstance().overlayTransformType());
         transformCombo.setTooltip(new Tooltip(
                 "Transform used for the OVERLAY only (the viewer sync is always a similarity): rigid = "
                         + "rotate + move (>= 2 points); similarity = + uniform scale (>= 2); affine = + shear "
                         + "(>= 3); TPS = nonlinear warp (>= 3, 5+ recommended)."));
         transformCombo.setOnAction(e -> {
+            AnchorSession.getInstance().setOverlayTransformType(transformCombo.getValue());
             // If sync is active, re-fit the overlay for the new type without disturbing the sync.
             if (AlignSyncManager.getInstance().isActive())
                 new AlignAndSyncCommand(qupath, transformCombo.getValue(), sourceCombo.getValue(), true).run();
         });
         sourceCombo.getItems().addAll(PointSource.values());
-        sourceCombo.getSelectionModel().select(PointSource.MANUAL);
+        sourceCombo.getSelectionModel().select(AnchorSession.getInstance().pointSource());
+        sourceCombo.setOnAction(e -> AnchorSession.getInstance().setPointSource(sourceCombo.getValue()));
         sourceCombo.setTooltip(new Tooltip(
                 "Which landmarks feed the fit: Manual = points you placed/added; All = every "
                         + "landmark; Dragged grid = grid points you moved."));
@@ -277,7 +283,9 @@ public class AnchorPanel extends SplitPane {
 
                 sectionLabel("Landmarks"),
                 fullWidth(button("Add landmark",
-                        "Add one point at the view center; drag it into place. (Shortcut+Alt+L)",
+                        "Add one point (lowest free number) at the view center; drag it into place. The "
+                                + "shortcut Shortcut+Alt+L adds it under the mouse cursor instead. While "
+                                + "synced, it is also added to the other images where that number is missing.",
                         () -> run(new AddLandmarkCommand(qupath)))),
                 labeledRow("Grid N:", nSpinner),
                 buttonRow(

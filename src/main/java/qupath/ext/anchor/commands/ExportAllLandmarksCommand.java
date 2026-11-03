@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import javafx.scene.control.ChoiceDialog;
 import javafx.stage.DirectoryChooser;
 import qupath.ext.anchor.io.LandmarkIO;
+import qupath.ext.anchor.model.ImageNames;
 import qupath.fx.dialogs.Dialogs;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.viewer.QuPathViewer;
@@ -91,7 +92,9 @@ public class ExportAllLandmarksCommand implements Runnable {
         }
 
         int exported = 0;
+        int totalLandmarks = 0;
         int skipped = 0;
+        List<String> perImage = new ArrayList<>();
         List<String> failed = new ArrayList<>();
         for (Target t : targets) {
             if (t.file().exists() && !overwrite) {
@@ -99,20 +102,30 @@ public class ExportAllLandmarksCommand implements Runnable {
                 continue;
             }
             try {
+                int count = LandmarkIO.landmarks(t.imageData()).size();
                 if (csv)
                     LandmarkIO.exportCsv(t.imageData(), t.file());
                 else
                     LandmarkIO.exportGeoJson(t.imageData(), t.file());
                 exported++;
+                totalLandmarks += count;
+                perImage.add(String.format("  %s: %d landmark(s)",
+                        ImageNames.fileName(t.imageData().getServer()), count));
             } catch (IOException e) {
                 logger.error("Failed to export {}", t.file().getName(), e);
                 failed.add(t.file().getName());
             }
         }
 
-        Dialogs.showInfoNotification(TITLE, String.format("Exported %d image(s) to %s%s%s",
-                exported, dir.getName(),
-                skipped > 0 ? "; skipped " + skipped + " existing" : "",
-                failed.isEmpty() ? "." : "; failed: " + failed));
+        StringBuilder summary = new StringBuilder(String.format(
+                "Exported %d landmark(s) from %d image(s) to %s:%n", totalLandmarks, exported, dir.getName()));
+        for (String line : perImage)
+            summary.append(line).append(System.lineSeparator());
+        if (skipped > 0)
+            summary.append("Skipped ").append(skipped).append(" existing file(s).").append(System.lineSeparator());
+        if (!failed.isEmpty())
+            summary.append("Failed: ").append(String.join(", ", failed)).append(System.lineSeparator());
+        logger.info("{}", summary.toString().trim());
+        Dialogs.showInfoNotification(TITLE, summary.toString().trim());
     }
 }

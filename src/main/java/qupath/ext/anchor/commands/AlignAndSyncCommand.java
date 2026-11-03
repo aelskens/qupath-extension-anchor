@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import qupath.ext.anchor.model.Landmarks;
 import qupath.ext.anchor.model.PointSource;
 import qupath.ext.anchor.overlay.ColorProjectionManager;
+import qupath.ext.anchor.session.AnchorSession;
 import qupath.ext.anchor.transform.CorrespondenceSet;
 import qupath.ext.anchor.transform.IdPoint;
 import qupath.ext.anchor.transform.TransformFitResult;
@@ -45,8 +46,12 @@ public class AlignAndSyncCommand implements Runnable {
     private final PointSource pointSource;
     private final boolean quiet;
 
+    /**
+     * Use the overlay transform and point source currently selected in the Anchor panel (stored in
+     * {@link AnchorSession}), so the keyboard shortcut behaves exactly like the panel's button.
+     */
     public AlignAndSyncCommand(QuPathGUI qupath) {
-        this(qupath, TransformType.AFFINE, PointSource.MANUAL);
+        this(qupath, AnchorSession.getInstance().overlayTransformType(), AnchorSession.getInstance().pointSource());
     }
 
     public AlignAndSyncCommand(QuPathGUI qupath, TransformType overlayType, PointSource pointSource) {
